@@ -1,2 +1,4 @@
 .idea/
 *.exe
+cmake-build-*
+.vscode/
