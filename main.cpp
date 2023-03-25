@@ -47,7 +47,7 @@ class Solution {
         optional<pair<int, int>> result{};
 
         for (int i{}; i < lists.size(); i++) {
-            auto node = lists[i];
+            auto node{lists[i]};
             if (node) {
                 if (!result || node->val < result.value().second) {
                     result = {i, node->val};
@@ -73,8 +73,8 @@ public:
     // 21. Merge Two Sorted Lists
     ListNode *mergeTwoLists(ListNode *list1, ListNode *list2) {
         // TODO can be rewritten to make the merge in-place
-        auto dummy = new ListNode();
-        auto current = dummy;
+        auto dummy{new ListNode()};
+        auto current{dummy};
         while (list1 || list2) {
             if (!list1) {
                 current->next = list2;
@@ -101,7 +101,7 @@ public:
     // 23. Merge k Sorted Lists
     // TODO rewrite this by using a helper function which merges two lists
     ListNode *mergeKLists(vector<ListNode *> &lists) {
-        auto min_result = find_min(lists);
+        auto min_result{find_min(lists)};
         if (min_result) {
             auto [min_i, min_val] = min_result.value();
             lists[min_i] = lists[min_i]->next;
@@ -115,10 +115,10 @@ public:
     // 206. Reverse Linked List
     ListNode *reverseList(ListNode *head) {
         if (!head) return nullptr;
-        auto curr = head;
-        ListNode *prev = nullptr;
+        auto curr{head};
+        ListNode *prev{nullptr};
         while (curr) {
-            auto next = curr->next;
+            auto next{curr->next};
             curr->next = prev;
             prev = curr;
             curr = next;
@@ -243,9 +243,9 @@ TEST_CASE("Test all") {
     }
 
     SUBCASE("Search a 2D matrix") {
-        vector<vector<int>> v = {{1,  3,  5,  7},
-                                 {10, 11, 16, 20},
-                                 {23, 30, 34, 60}};
+        vector<vector<int>> v{{1,  3,  5,  7},
+                              {10, 11, 16, 20},
+                              {23, 30, 34, 60}};
         CHECK(s.searchMatrix(v, 3) == true);
         CHECK(s.searchMatrix(v, 13) == false);
         v = {{1},
@@ -258,7 +258,7 @@ TEST_CASE("Test all") {
     }
 
     SUBCASE("Single number") {
-        vector<int> v = {4, 1, 2, 1, 2};
+        vector<int> v{4, 1, 2, 1, 2};
         CHECK(s.singleNumber(v) == 4);
     }
 }
