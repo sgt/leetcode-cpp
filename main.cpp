@@ -2,10 +2,10 @@
 #pragma ide diagnostic ignored "readability-convert-member-functions-to-static"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
-#include <vector>
+#include <functional>
 #include <numeric>
 #include <optional>
-#include <functional>
+#include <vector>
 
 #include "doctest.h"
 
@@ -33,7 +33,7 @@ vector<int> listNode_to_vector(const ListNode *node) {
 
 ListNode *vector_to_listNode(const vector<int> &v) {
     ListNode dummy{0};
-    (void) accumulate(v.cbegin(), v.cend(), &dummy, [](ListNode *n, int v) {
+    (void)accumulate(v.cbegin(), v.cend(), &dummy, [](ListNode *n, int v) {
         n->next = new ListNode(v);
         return n->next;
     });
@@ -41,7 +41,6 @@ ListNode *vector_to_listNode(const vector<int> &v) {
 }
 
 class Solution {
-
     // Returns (index, value) of minimal value among first elements of lists
     static optional<pair<int, int>> find_min(vector<ListNode *> &lists) {
         optional<pair<int, int>> result{};
@@ -58,15 +57,18 @@ class Solution {
         return result;
     }
 
-public:
+   public:
     static int add(int x, int y) { return x + y; }
 
     // A companion function for guess-a-number.
     static function<int(int)> guess_fn(int pick) {
         return [=](int num) {
-            if (num > pick) return -1;
-            else if (num < pick) return 1;
-            else return 0;
+            if (num > pick)
+                return -1;
+            else if (num < pick)
+                return 1;
+            else
+                return 0;
         };
     }
 
@@ -127,9 +129,8 @@ public:
     }
 
     // 704. Binary Search
-    int search(vector<int> &nums, int target) {
+    int binarySearch(vector<int> &nums, int target, int low, int high) {
         if (nums.empty()) return -1;
-        int low{0}, high{static_cast<int>(nums.size() - 1)};
         while (low <= high) {
             int i{(low + high) / 2};
             if (nums[i] > target) {
@@ -141,6 +142,10 @@ public:
             }
         }
         return -1;
+    }
+
+    int binarySearch(vector<int> &nums, int target) {
+        return binarySearch(nums, target, 0, static_cast<int>(nums.size() - 1));
     }
 
     // 374. Guess Number Higher or Lower
@@ -162,13 +167,12 @@ public:
 
     // 74. Search a 2D Matrix
     bool searchMatrix(vector<vector<int>> &matrix, int target) {
-        int m{static_cast<int>(matrix.size())}, n{static_cast<int>(matrix[0].size())};
-        auto get_val{
-                [=](size_t val) {
-                    size_t nc{val % n}, mc{val / n};
-                    return matrix[mc][nc];
-                }
-        };
+        int m{static_cast<int>(matrix.size())},
+            n{static_cast<int>(matrix[0].size())};
+        auto get_val{[=](size_t val) {
+            size_t nc{val % n}, mc{val / n};
+            return matrix[mc][nc];
+        }};
         int low{0}, high{m * n - 1};
         while (low <= high) {
             int i{(low + high) / 2};
@@ -186,54 +190,89 @@ public:
 
     // 136. Single Number
     int singleNumber(vector<int> &nums) {
-        return accumulate(nums.cbegin(), nums.cend(), 0, [](int acc, int i) { return acc ^ i; });
+        return accumulate(nums.cbegin(), nums.cend(), 0,
+                          [](int acc, int i) { return acc ^ i; });
+    }
+
+    // Return element just before the pivot.
+    // Assume all values in `nums` are unique.
+    [[nodiscard]] int findPivotInRotatedArray(const vector<int> &nums) const {
+        int low{0}, high{static_cast<int>(nums.size() - 1)};
+        while (high >= low) {
+            int i{(low + high) / 2};
+            if (i > low && nums[i] < nums[i - 1]) return i - 1;
+            if (i < high && nums[i] > nums[i + 1]) return i;
+            if (nums[low] > nums[i])
+                high = i - 1;
+            else
+                low = i + 1;
+        }
+        // the array is not rotated
+        return -1;
+    }
+
+    // 33. Search in Rotated Sorted Array
+    int searchInRotatedSortedArray(vector<int> &nums, int target) {
+        int pivot = findPivotInRotatedArray(nums);
+        if (pivot == -1) return binarySearch(nums, target);
+        if (target <= nums[pivot] && target >= nums[0])
+            return binarySearch(nums, target, 0, pivot);
+        return binarySearch(nums, target, pivot + 1,
+                            static_cast<int>(nums.size() - 1));
     }
 };
 
 TEST_CASE("Test all") {
     Solution s{};
 
-    SUBCASE("Silly test") {
-        CHECK(Solution::add(2, 3) == 5);
-    }
+    SUBCASE("Silly test") { CHECK(Solution::add(2, 3) == 5); }
 
     SUBCASE("Linked list to vector") {
-        CHECK(listNode_to_vector(new ListNode(1, new ListNode(2, new ListNode(3)))) == vector<int>{1, 2, 3});
+        CHECK(listNode_to_vector(
+                  new ListNode(1, new ListNode(2, new ListNode(3)))) ==
+              vector<int>{1, 2, 3});
     }
 
     SUBCASE("Vector to linked list") {
-        for (auto v: vector<vector<int>>{{},
-                                         {1, 2, 3}}) {
+        for (auto v : vector<vector<int>>{{}, {1, 2, 3}}) {
             auto vln = vector_to_listNode(v);
             CHECK(listNode_to_vector(vln) == v);
         }
     }
 
     SUBCASE("Merge two lists") {
-        CHECK(listNode_to_vector(s.mergeTwoLists(vector_to_listNode({2, 4}), vector_to_listNode({1, 3}))) ==
+        CHECK(listNode_to_vector(s.mergeTwoLists(vector_to_listNode({2, 4}),
+                                                 vector_to_listNode({1, 3}))) ==
               vector<int>{1, 2, 3, 4});
     }
 
     SUBCASE("Merge K lists") {
-        vector<ListNode *> lists = {vector_to_listNode({2, 4}), vector_to_listNode({4, 5}), vector_to_listNode({1, 3})};
-        CHECK(listNode_to_vector(s.mergeKLists(lists)) == vector<int>{1, 2, 3, 4, 4, 5});
+        vector<ListNode *> lists = {vector_to_listNode({2, 4}),
+                                    vector_to_listNode({4, 5}),
+                                    vector_to_listNode({1, 3})};
+        CHECK(listNode_to_vector(s.mergeKLists(lists)) ==
+              vector<int>{1, 2, 3, 4, 4, 5});
     }
 
     SUBCASE("Reverse linked list") {
-        CHECK(listNode_to_vector(s.reverseList(vector_to_listNode({1, 2, 3}))) == vector<int>{3, 2, 1});
-        CHECK(listNode_to_vector(s.reverseList(vector_to_listNode({1, 2}))) == vector<int>{2, 1});
-        CHECK(listNode_to_vector(s.reverseList(vector_to_listNode({}))) == vector<int>{});
-        CHECK(listNode_to_vector(s.reverseList(vector_to_listNode({1}))) == vector<int>{1});
+        CHECK(listNode_to_vector(s.reverseList(
+                  vector_to_listNode({1, 2, 3}))) == vector<int>{3, 2, 1});
+        CHECK(listNode_to_vector(s.reverseList(vector_to_listNode({1, 2}))) ==
+              vector<int>{2, 1});
+        CHECK(listNode_to_vector(s.reverseList(vector_to_listNode({}))) ==
+              vector<int>{});
+        CHECK(listNode_to_vector(s.reverseList(vector_to_listNode({1}))) ==
+              vector<int>{1});
     }
 
     SUBCASE("Binary search") {
         vector<int> v{-1, 0, 3, 5, 9, 12};
-        CHECK(s.search(v, 9) == 4);
-        CHECK(s.search(v, 2) == -1);
+        CHECK(s.binarySearch(v, 9) == 4);
+        CHECK(s.binarySearch(v, 2) == -1);
         v = {5};
-        CHECK(s.search(v, 5) == 0);
-        CHECK(s.search(v, 10) == -1);
-        CHECK(s.search(v, 0) == -1);
+        CHECK(s.binarySearch(v, 5) == 0);
+        CHECK(s.binarySearch(v, 10) == -1);
+        CHECK(s.binarySearch(v, 0) == -1);
     }
 
     SUBCASE("Guess number") {
@@ -243,15 +282,10 @@ TEST_CASE("Test all") {
     }
 
     SUBCASE("Search a 2D matrix") {
-        vector<vector<int>> v{{1,  3,  5,  7},
-                              {10, 11, 16, 20},
-                              {23, 30, 34, 60}};
+        vector<vector<int>> v{{1, 3, 5, 7}, {10, 11, 16, 20}, {23, 30, 34, 60}};
         CHECK(s.searchMatrix(v, 3) == true);
         CHECK(s.searchMatrix(v, 13) == false);
-        v = {{1},
-             {2},
-             {3},
-             {4}};
+        v = {{1}, {2}, {3}, {4}};
         CHECK(s.searchMatrix(v, 3) == true);
         CHECK(s.searchMatrix(v, 13) == false);
         CHECK(s.searchMatrix(v, -1) == false);
@@ -260,6 +294,26 @@ TEST_CASE("Test all") {
     SUBCASE("Single number") {
         vector<int> v{4, 1, 2, 1, 2};
         CHECK(s.singleNumber(v) == 4);
+    }
+
+    SUBCASE("Find pivot in rotated sorted array") {
+        CHECK(s.findPivotInRotatedArray({4, 5, 6, 7, 0, 1, 2}) == 3);
+        CHECK(s.findPivotInRotatedArray({7, 0, 1, 2}) == 0);
+        CHECK(s.findPivotInRotatedArray({3, 2, 2, 2}) == 0);
+        CHECK(s.findPivotInRotatedArray({3, 3, 3, 2}) == 2);
+        CHECK(s.findPivotInRotatedArray({3, 3, 3, 3}) == -1);
+        CHECK(s.findPivotInRotatedArray({1}) == -1);
+    }
+
+    SUBCASE("Search in Rotated Sorted Array") {
+        vector<int> v{4, 5, 6, 7, 0, 1, 2};
+        CHECK(s.searchInRotatedSortedArray(v, 0) == 4);
+        CHECK(s.searchInRotatedSortedArray(v, 3) == -1);
+        v = {1};
+        CHECK(s.searchInRotatedSortedArray(v, 0) == -1);
+        v = {2, 5, 6, 0, 0, 1, 2};
+        CHECK(s.searchInRotatedSortedArray(v, 0) > -1);
+        CHECK(s.searchInRotatedSortedArray(v, 3) == -1);
     }
 }
 
